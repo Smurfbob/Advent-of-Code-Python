@@ -1,3 +1,6 @@
+import re
+
+
 class NumberArray:
     lines: [str]
 
@@ -5,7 +8,11 @@ class NumberArray:
     def gen_line_array_from_path(path: str) -> [str]:
         lines: [str] = []
         for line in open(path):
-            lines.append(line.replace("\n", ""))
+            line = line.replace("\n", "")
+            if not re.match("^[01]+$", line):
+                raise Exception("Value \"%s\" is not a binary string!" % line)
+            lines.append(line)
+
         return lines
 
     def __init__(self, path: str):
