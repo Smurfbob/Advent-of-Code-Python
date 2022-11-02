@@ -121,12 +121,38 @@ class BingoGame:
     draw_numbers: [int]
     bingo_boards: [BingoBoard]
     last_call: int = None
+    last_counter: int = None
+    wining_board_id: int
 
     def __init__(self, path: str):
+        self.wining_board_id = 0
+        self.last_counter = 0
         self.bingo_boards = parse_bingo_boards(path)
         self.draw_numbers = parse_draw_numbers_from_path(path)
 
+    def get_last_winning_game(self) -> BingoBoard:
+        self.remove_marker_from_all_boards()
+        bingo_board_copy: [BingoBoard] = []
+
+        for board in self.bingo_boards:
+            bingo_board_copy.append(board)
+
+        for number in self.draw_numbers:
+            self.draw_number(number)
+            boards_to_remove: [BingoBoard] = []
+            for board in bingo_board_copy:
+                if board.has_board_won() and len(bingo_board_copy) > 1:
+                    boards_to_remove.append(board)
+            for board in boards_to_remove:
+                bingo_board_copy.remove(board)
+            if len(bingo_board_copy) == 1 and bingo_board_copy[0].has_board_won():
+                self.last_counter = number
+                return bingo_board_copy[0]
+
+        return None
+
     def play_game_until_winner(self) -> [{int, BingoBoard}]:
+        self.remove_marker_from_all_boards()
         for number in self.draw_numbers:
             self.draw_number(number)
             possible_winners: [{int, BingoBoard}] = self.get_winning_boards()
@@ -134,6 +160,10 @@ class BingoGame:
                 self.last_call = number
                 return possible_winners
         return []
+
+    def remove_marker_from_all_boards(self):
+        for board in self.bingo_boards:
+            board.remove_all_marked_positions()
 
     def get_winning_boards(self) -> [{int, BingoBoard}]:
         winning_boards: [[int, BingoBoard]] = []
